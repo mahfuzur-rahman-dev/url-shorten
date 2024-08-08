@@ -17,4 +17,8 @@
     <ProjectReference Include="..\UrlShorten.DataAccess\UrlShorten.DataAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\adminkit\fonts\" />
+  </ItemGroup>
+
 </Project>

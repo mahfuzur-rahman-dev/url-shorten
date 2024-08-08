@@ -1,0 +1,79 @@
+﻿
+
+<div class="sidebar-content js-simplebar">
+    <a class="sidebar-brand" href="#">
+        <span class="align-middle">Work Hub</span>
+    </a>
+
+    <ul class="sidebar-nav">
+
+        <li class="sidebar-header">Profile & Summary</li>
+
+        <li class="sidebar-item active">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Profile" asp-action="Index">
+                <i class="align-middle me-1" data-feather="user"></i> <span class="align-middle">Profile</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Summary" asp-action="Index">
+                <i class="align-middle" data-feather="activity"></i> <span class="align-middle">Work Summary</span>
+            </a>
+        </li>
+
+        <li class="sidebar-header">Today</li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Work" asp-action="Index">
+                <i class="align-middle" data-feather="list"></i> <span class="align-middle">Work list</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Work" asp-action="ImportantWorkList">
+                <i class="align-middle" data-feather="star"></i> <span class="align-middle">Important</span>
+            </a>
+        </li>
+
+        <li class="sidebar-header">Work Files</li>
+
+        <li class="sidebar-item" data-bs-toggle="modal" data-bs-target="#createWorkFileInputModal">
+            <a class="sidebar-link">
+                <i class="align-middle" data-feather="plus"></i> <span class="align-middle">Create new work file</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="WorkFile" asp-action="Index">
+                <i class="align-middle" data-feather="server"></i> <span class="align-middle">Work files</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- Modal here -->
+<div class="modal fade" id="createWorkFileInputModal" tabindex="-1" aria-labelledby="createWorkFileInputModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="createWorkFileInputModalLabel">Create New Work File</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="workFileNameInput" class="form-label">Work File Name</label>
+                    <input type="text" class="form-control" id="workFileNameInput" placeholder="Enter work file name" required>
+                    <div class="invalid-feedback">
+                        Please provide a valid work file name.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveWorkFileButton">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

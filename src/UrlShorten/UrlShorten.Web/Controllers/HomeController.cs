@@ -26,9 +26,9 @@ namespace UrlShorten.Web.Controllers
         {
             var checkShortKeyword = await _unitOfWork.Url.GetCountAsync(x=>x.ShortKeyword == request.ShortKeyword);
             if(checkShortKeyword > 0)
-                return Json(new { Available = true });
-            else
                 return Json(new { Available = false });
+            else
+                return Json(new { Available = true });
         }
 
         public IActionResult Privacy()
