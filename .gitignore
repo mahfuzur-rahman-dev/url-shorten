@@ -1,0 +1,15 @@
+**/.vs
+**/bin
+**/obj
+**/*.user
+**/Logs/*
+
+# Manage image
+
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.bmp
+**/*.tiff
+**/*.svg
