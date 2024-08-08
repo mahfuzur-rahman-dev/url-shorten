@@ -2,7 +2,102 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row">
+    <div class="col-8">
+        <div class="justify-content-center m-auto">
+            <div class="col-12 d-flex justify-content-center align-items-center">
+                <div class="p-4 border rounded w-100">
+                    <form>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="longUrl" placeholder="Enter your long url" required>
+                        </div>
+                        <div class="row my-3">
+                            <div class="col-3">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="fixedPartOfUrl" value="url.shorten.com" disabled>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="shortKeyword" placeholder="Your short keyword" required>
+                                </div>
+                            </div>
+
+                            <div class="col-3">
+                                <button id="checkAvailabilityBtn" type="button" class="btn btn-primary">Check availability</button>
+
+                                <div id="loader" class="d-none">
+                                    <button class="btn btn-primary" type="button" disabled>
+                                        <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                        <span role="status">Checking .........</span>
+                                    </button>
+                                </div>
+
+                                <span id="availabilityMessage" class="my-2"> </span>
+                            </div>
+                        </div>
+
+                        <button id="createShortUrlSubmitBtn" type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-4">
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#checkAvailabilityBtn').click(function () {
+                // Capture input data
+                var longUrl = $('#longUrl').val();
+                var shortKeyword = $('#shortKeyword').val();
+
+                // Validate input (optional)
+                if (!longUrl || !shortKeyword) {
+                    alert('Please enter both long URL and short keyword.');
+                    return;
+                }
+
+                // Show the loader
+                $('#loader').removeClass('d-none');
+                $('#checkAvailabilityBtn').addClass('d-none');
+
+                $.ajax({
+                    url: '/Home/CheckShortKeywordAvailability', // Replace with your controller and action
+                    type: 'POST',
+                    data: {
+                        longUrl: longUrl,
+                        shortKeyword: shortKeyword
+                    },
+                    success: function (response) {
+                        // Handle successful response
+                        var availabilityMessage = $('#availabilityMessage'); // Corrected typo: availabilityMessage
+
+                        if (response.Available === true) {
+                            availabilityMessage.addClass('text-danger').removeClass('d-none').text('<i class="bi bi-x-circle-fill"></i> Already taken');
+                        } else {
+                            availabilityMessage.addClass('text-success').text('<i class="bi bi-check-circle-fill"></i> Available');
+                        }
+
+                        // Hide the loader
+                        $('#loader').addClass('d-none');
+                        $('#checkAvailabilityBtn').removeClass('d-none');
+                    },
+                    error: function (error) {
+                        // Handle error
+                        console.error(error);
+                        $('#availabilityMessage').text('An error occurred. Please try again.'); // Direct error message
+                        // Hide the loader
+                        $('#loader').addClass('d-none');
+                        $('#checkAvailabilityBtn').removeClass('d-none');
+                    }
+                });
+            });
+        });
+    </script>
+}
