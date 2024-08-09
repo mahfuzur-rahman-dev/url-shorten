@@ -17,9 +17,11 @@ namespace UrlShorten.Web.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var allUrls= await _unitOfWork.Url.GetAllAsync();
+            var allShortUrl = allUrls.Select(link => link.ShortUrl).ToList();
+            return View(allShortUrl);
         }
 
         [HttpPost]
@@ -37,22 +39,20 @@ namespace UrlShorten.Web.Controllers
         public async Task<IActionResult> CreateShortUrl(CreateShortUrlRequestModel request)
         {
             if (request is null)
-            {
                 return BadRequest();
-            }
-
-            var addUrl = new Url
-            {
-                LongUrl = request.LongUrl,
-                Domain = request.Domain,
-                ShortKeyword = request.ShortKeyword,
-                ShortUrl = request.Domain + "/" + request.ShortKeyword,
-                CreatedDateTime = DateTime.Now,
-                UpdatedDateTime = DateTime.Now
-            };
 
             try
             {
+                var addUrl = new Url
+                {
+                    LongUrl = request.LongUrl,
+                    Domain = request.Domain,
+                    ShortKeyword = request.ShortKeyword,
+                    ShortUrl = request.Domain + "/" + request.ShortKeyword,
+                    CreatedDateTime = DateTime.Now,
+                    UpdatedDateTime = DateTime.Now
+                };
+
                 await _unitOfWork.Url.AddAsync(addUrl);
                 await _unitOfWork.SaveAsync();
 

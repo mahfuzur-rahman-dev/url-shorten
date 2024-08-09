@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<string>
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -6,62 +7,84 @@
 
 }
 
-
-
-<div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10 col-sm-12">
-        <div class="p-4 border rounded">
-                <div class="form-group mb-3">
-                    <input type="text" class="form-control py-3" id="longUrl" placeholder="Enter your long URL" required>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-3 mb-2 mb-sm-4">
-                        <div class="form-group">
-                            <input type="text" class="form-control py-3" id="domain" value="shorten.com" disabled>
-                        </div>
+<div class="row">
+    <div class="col-md-8 py-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-md-10 col-sm-12">
+                <div class="p-4 border rounded">
+                    <div class="form-group mb-3">
+                        <input type="text" class="form-control py-3" id="longUrl" placeholder="Enter your long URL" required>
                     </div>
-                    <div class="col-md-5 mb-2 mb-sm-4">
-                        <div class="form-group">
-                            <input type="text" class="form-control py-3" id="shortKeyword" placeholder="Your short keyword" required>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex flex-column">
-                            <button id="checkAvailabilityBtn" type="button" class="btn btn-info w-100 py-3">Check availability</button>
-                            <div id="loader" class="d-none">
-                                <button class="btn btn-info w-100 py-3" type="button" disabled>
-                                    <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
-                                    <span role="status">Checking .........</span>
-                                </button>
+                    <div class="row mb-3">
+                        <div class="col-md-3 mb-2 mb-sm-4">
+                            <div class="form-group">
+                                <input type="text" class="form-control py-3" id="domain" value="shorten.com" disabled>
                             </div>
-                            <span id="availabilityMessage" class="my-2 d-block text-center"> </span>
+                        </div>
+                        <div class="col-md-5 mb-2 mb-sm-4">
+                            <div class="form-group">
+                                <input type="text" class="form-control py-3" id="shortKeyword" placeholder="Your short keyword" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex flex-column">
+                                <button id="checkAvailabilityBtn" type="button" class="btn btn-info w-100 py-3">Check availability</button>
+                                <div id="loader" class="d-none">
+                                    <button class="btn btn-info w-100 py-3" type="button" disabled>
+                                        <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                        <span role="status">Checking .........</span>
+                                    </button>
+                                </div>
+                                <span id="availabilityMessage" class="my-2 d-block text-center"> </span>
+                            </div>
                         </div>
                     </div>
+                    <button id="createShortUrlSubmitBtn" type="button" class="btn btn-primary w-100 py-3" disabled>Create short url</button>
                 </div>
-                <button id="createShortUrlSubmitBtn" type="button" class="btn btn-primary w-100 py-3" disabled>Create short url</button>
+            </div>
         </div>
     </div>
+
+    <div class="col-md-4 add-url">
+        @if (Model != null && Model.Any())
+        {
+            <div id="linkListCard" class="card">
+                <div class="card-header bg-primary ">
+                    <h1 class="text-white">List of Links</h1>
+                </div>
+                <div class="card-body">
+                    @{
+                        var linkCount = 1;
+                        foreach (var link in Model)
+                        {
+                            <div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                <span class="fw-bold me-3">@linkCount.</span>
+                                <a href="@link" class="text-decoration-underline">@link</a>
+                            </div>
+                            linkCount++;
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
 </div>
-
-
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-
             $('#checkAvailabilityBtn').click(function () {
                 // Capture input data
                 var longUrl = $('#longUrl').val();
                 var shortKeyword = $('#shortKeyword').val();
                 var domain = $('#domain').val();
-                // Validate input (optional)
-                if (!longUrl || !shortKeyword) {
 
+                // Validate input
+                if (!longUrl || !shortKeyword) {
                     Swal.fire({
                         icon: "error",
                         title: "Oops...",
                         text: "Please enter both long URL and short keyword."
-
                     });
                     return;
                 }
@@ -71,7 +94,7 @@
                 $('#checkAvailabilityBtn').addClass('d-none');
 
                 $.ajax({
-                    url: '/Home/CheckShortKeywordAvailability', // Replace with your controller and action
+                    url: '/Home/CheckShortKeywordAvailability',
                     type: 'POST',
                     data: {
                         longUrl: longUrl,
@@ -82,16 +105,19 @@
                         var availabilityMessage = $('#availabilityMessage');
                         var submitBtn = $('#createShortUrlSubmitBtn');
 
+                        $('#availabilityMessage').removeClass('text-danger').empty();
+                        $('#availabilityMessage').removeClass('text-success').empty();
+
                         if (response.available == true) {
                             availabilityMessage.html('<i class="align-middle me-2" data-feather="check-circle"></i> Available')
                                 .addClass('text-success')
                                 .removeClass('d-none');
-                            submitBtn.prop('disabled', false); // Enable submit button
+                            submitBtn.prop('disabled', false);
                         } else {
                             availabilityMessage.html('<i class="align-middle me-2" data-feather="x-circle"></i> Already taken')
                                 .addClass('text-danger')
                                 .removeClass('d-none');
-                            submitBtn.prop('disabled', true); // Disable submit button
+                            submitBtn.prop('disabled', true);
                         }
                         feather.replace();
 
@@ -100,70 +126,81 @@
                         $('#checkAvailabilityBtn').removeClass('d-none');
                     },
                     error: function (error) {
-                        // Handle error
                         console.error(error);
-                        $('#availabilityMessage').text('An error occurred. Please try again.'); // Direct error message
-                        // Hide the loader
+                        $('#availabilityMessage').text('An error occurred. Please try again.');
                         $('#loader').addClass('d-none');
                         $('#checkAvailabilityBtn').removeClass('d-none');
                     }
                 });
             });
-        });
-    </script>
 
-    <script>
+            $('#createShortUrlSubmitBtn').click(function () {
+                // Capture input data
+                var longUrl = $('#longUrl').val();
+                var shortKeyword = $('#shortKeyword').val();
+                var domain = $('#domain').val();
 
-        $('#createShortUrlSubmitBtn').click(function () {
-            // Capture input data
-            var longUrl = $('#longUrl').val();
-            var shortKeyword = $('#shortKeyword').val();
-            var domain = $('#domain').val();
+                // Create short url ajax request...
+                $.ajax({
+                    url: '/Home/CreateShortUrl',
+                    type: 'POST',
+                    data: {
+                        longUrl: longUrl,
+                        shortKeyword: shortKeyword,
+                        domain: domain
+                    },
+                    success: function (response) {
+                        if (response.createUrlStatus) {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: "top",
+                                showConfirmButton: false,
+                                timer: 5000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.onmouseenter = Swal.stopTimer;
+                                    toast.onmouseleave = Swal.resumeTimer;
+                                }
+                            });
+                            Toast.fire({
+                                icon: "success",
+                                title: "Short URL created successfully..."
+                            });
 
+                            // Dynamically add the new short URL to the list
+                            var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                                           <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
+                                                           <a href="${domain}/${shortKeyword}" class="text-decoration-underline">${domain}/${shortKeyword}</a>
+                                                       </div>`;
 
-
-            // Create short url ajax request...
-            $.ajax({
-                url: '/Home/CreateShortUrl',
-                type: 'POST',
-                data: {
-                    longUrl: longUrl,
-                    shortKeyword: shortKeyword,
-                    domain: domain
-                },
-                success: function (response) {
-
-                    if (response.createUrlStatus) {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: "top",
-                            showConfirmButton: false,
-                            timer: 5000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.onmouseenter = Swal.stopTimer;
-                                toast.onmouseleave = Swal.resumeTimer;
+                            if ($('#linkListCard').length) {
+                                $('#linkListCard .card-body').append(newLinkHtml);
+                            } else {
+                                var linkListCardHtml = `<div id="linkListCard" class="card">
+                                                                    <div class="card-header bg-primary ">
+                                                                        <h1 class="text-white">List of Links</h1>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        ${newLinkHtml}
+                                                                    </div>
+                                                                </div>`;
+                                $('.add-url').append(linkListCardHtml);
                             }
-                        });
-                        Toast.fire({
-                            icon: "success",
-                            title: "Short url created successfully..."
-                        });
-                    }                   
-                },
-                error: function (error) {
 
-                    Swal.fire({
-                        icon: "error",
-                        title: "Oops...",
-                        text: "An error occured while tried to short the url"
-                    });
-                  
-                }
+                            $('#createShortUrlSubmitBtn').prop('disabled', true);
+                            $('#availabilityMessage').addClass('d-none');
+                        }
+                    },
+                    error: function (error) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Oops...",
+                            text: "An error occurred while trying to shorten the URL"
+                        });
+                    }
+                });
             });
-
         });
 
     </script>
 }
-
