@@ -19,19 +19,27 @@ namespace UrlShorten.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var allUrls= await _unitOfWork.Url.GetAllAsync();
-            var allShortUrl = allUrls.Select(link => link.ShortUrl).ToList();
-            return View(allShortUrl);
+            var allUrls = await _unitOfWork.Url.GetAllAsync();
+            //var allShortUrl = allUrls.Select(link => link.ShortUrl).ToList();
+            return View(allUrls);
         }
 
         [HttpPost]
         public async Task<IActionResult> CheckShortKeywordAvailability(CheckAvailabilityRequestModel request)
         {
-            var checkShortKeyword = await _unitOfWork.Url.GetCountAsync(x => x.ShortKeyword == request.ShortKeyword);
-            if (checkShortKeyword > 0)
-                return Json(new { Available = false });
+            if (ModelState.IsValid)
+            {
+                var checkShortKeyword = await _unitOfWork.Url.GetCountAsync(x => x.ShortKeyword == request.ShortKeyword.ToLower());
+                if (checkShortKeyword > 0)
+                    return Json(new { Available = false });
+                else
+                    return Json(new { Available = true });
+            }
             else
-                return Json(new { Available = true });
+            {
+                return BadRequest(new { message = "There cannot be empty space and length should be between 4 and 15" });
+            }
+
         }
 
 
@@ -41,30 +49,52 @@ namespace UrlShorten.Web.Controllers
             if (request is null)
                 return BadRequest();
 
-            try
+            if (ModelState.IsValid)
             {
-                var addUrl = new Url
+                try
                 {
-                    LongUrl = request.LongUrl,
-                    Domain = request.Domain,
-                    ShortKeyword = request.ShortKeyword,
-                    ShortUrl = request.Domain + "/" + request.ShortKeyword,
-                    CreatedDateTime = DateTime.Now,
-                    UpdatedDateTime = DateTime.Now
-                };
+                    var addUrl = new Url
+                    {
+                        LongUrl = request.LongUrl,
+                        Domain = request.Domain,
+                        ShortKeyword = request.ShortKeyword.ToLower(),
+                        ShortUrl = "https://localhost:7063/" + request.Domain + "/" + request.ShortKeyword.ToLower(),
+                        CreatedDateTime = DateTime.Now,
+                        UpdatedDateTime = DateTime.Now
+                    };
 
-                await _unitOfWork.Url.AddAsync(addUrl);
-                await _unitOfWork.SaveAsync();
+                    await _unitOfWork.Url.AddAsync(addUrl);
+                    await _unitOfWork.SaveAsync();
 
-                // Prepare data for the success response
+                    // Prepare data for the success response
 
-                return Json(new { CreateUrlStatus = true }); // Return JSON with success status and short URL
+                    return Json(new { CreateUrlStatus = true }); // Return JSON with success status and short URL
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return Json(new { CreateUrlStatus = false }); // Return JSON with failure status
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine(ex.Message);
-                return Json(new { CreateUrlStatus = false }); // Return JSON with failure status
+                return BadRequest(new { message = "There cannot be empty space and length should be between 4 and 15" });
             }
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RedirectToLongUrl(string shortUrl)
+        {
+            var checkShortUrl = await _unitOfWork.Url.GetAsync(x => x.ShortUrl == shortUrl);
+            if (checkShortUrl == null)
+                return BadRequest(new { message = "Link broken" });
+
+            var longUrl = checkShortUrl.Select(x=>x.LongUrl).FirstOrDefault();
+
+            // Return the long URL as JSON
+            return Json(new { longUrl = longUrl });
+
         }
 
 

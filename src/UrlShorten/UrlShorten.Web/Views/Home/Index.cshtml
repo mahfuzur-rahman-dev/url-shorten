@@ -1,4 +1,4 @@
-﻿@model List<string>
+﻿@model IList<Url>
 @{
     ViewData["Title"] = "Home Page";
 }
@@ -24,6 +24,7 @@
                         <div class="col-md-5 mb-2 mb-sm-4">
                             <div class="form-group">
                                 <input type="text" class="form-control py-3" id="shortKeyword" placeholder="Your short keyword" required>
+                                <span id="shortkeywordValidationMassage" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -55,12 +56,12 @@
                 <div class="card-body">
                     @{
                         var linkCount = 1;
-                        foreach (var link in Model)
+                        foreach (var url in Model)
                         {
-                            <div class="d-flex align-items-center mb-2 border-bottom py-3">
-                                <span class="fw-bold me-3">@linkCount.</span>
-                                <a href="@link" class="text-decoration-underline">@link</a>
-                            </div>
+                                <div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                    <span class="fw-bold me-3">@linkCount.</span>
+                                <a  onclick="RedirectToLongUrl('@url.ShortUrl')"  class="text-decoration-underline">@url.ShortUrl</a>
+                                </div>
                             linkCount++;
                         }
                     }
@@ -72,11 +73,10 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
             $('#checkAvailabilityBtn').click(function () {
                 // Capture input data
                 var longUrl = $('#longUrl').val();
-                var shortKeyword = $('#shortKeyword').val();
+                var shortKeyword = $('#shortKeyword').val().toLowerCase();
                 var domain = $('#domain').val();
 
                 // Validate input
@@ -104,10 +104,8 @@
                         // Handle successful response
                         var availabilityMessage = $('#availabilityMessage');
                         var submitBtn = $('#createShortUrlSubmitBtn');
-
-                        $('#availabilityMessage').removeClass('text-danger').empty();
-                        $('#availabilityMessage').removeClass('text-success').empty();
-
+                        $('#shortkeywordValidationMassage').text('')
+                        
                         if (response.available == true) {
                             availabilityMessage.html('<i class="align-middle me-2" data-feather="check-circle"></i> Available')
                                 .addClass('text-success')
@@ -121,86 +119,130 @@
                         }
                         feather.replace();
 
+                        
+
                         // Hide the loader
                         $('#loader').addClass('d-none');
                         $('#checkAvailabilityBtn').removeClass('d-none');
                     },
                     error: function (error) {
-                        console.error(error);
-                        $('#availabilityMessage').text('An error occurred. Please try again.');
+                        $('#shortkeywordValidationMassage').text(error.responseJSON.message);
+
+                        // Optionally log error to console if needed for debugging
+                        console.error(error.responseJSON.message);
                         $('#loader').addClass('d-none');
                         $('#checkAvailabilityBtn').removeClass('d-none');
                     }
                 });
             });
 
-            $('#createShortUrlSubmitBtn').click(function () {
-                // Capture input data
-                var longUrl = $('#longUrl').val();
-                var shortKeyword = $('#shortKeyword').val();
-                var domain = $('#domain').val();
+    </script>
 
-                // Create short url ajax request...
-                $.ajax({
-                    url: '/Home/CreateShortUrl',
-                    type: 'POST',
-                    data: {
-                        longUrl: longUrl,
-                        shortKeyword: shortKeyword,
-                        domain: domain
-                    },
-                    success: function (response) {
-                        if (response.createUrlStatus) {
-                            const Toast = Swal.mixin({
-                                toast: true,
-                                position: "top",
-                                showConfirmButton: false,
-                                timer: 5000,
-                                timerProgressBar: true,
-                                didOpen: (toast) => {
-                                    toast.onmouseenter = Swal.stopTimer;
-                                    toast.onmouseleave = Swal.resumeTimer;
-                                }
-                            });
-                            Toast.fire({
-                                icon: "success",
-                                title: "Short URL created successfully..."
-                            });
+    <script>
+        $('#createShortUrlSubmitBtn').click(function () {
+            // Capture input data
+            var longUrl = $('#longUrl').val();
+            var shortKeyword = $('#shortKeyword').val();
+            var domain = $('#domain').val();
 
-                            // Dynamically add the new short URL to the list
-                            var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
-                                                           <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
-                                                           <a href="${domain}/${shortKeyword}" class="text-decoration-underline">${domain}/${shortKeyword}</a>
-                                                       </div>`;
+            var avc = "abc";
+            // Create short url ajax request...
+            $.ajax({
+                url: '/Home/CreateShortUrl',
+                type: 'POST',
+                data: {
+                    longUrl: longUrl,
+                    shortKeyword: shortKeyword,
+                    domain: domain
+                },
+                success: function (response) {
 
-                            if ($('#linkListCard').length) {
-                                $('#linkListCard .card-body').append(newLinkHtml);
-                            } else {
-                                var linkListCardHtml = `<div id="linkListCard" class="card">
-                                                                    <div class="card-header bg-primary ">
-                                                                        <h1 class="text-white">List of Links</h1>
-                                                                    </div>
-                                                                    <div class="card-body">
-                                                                        ${newLinkHtml}
-                                                                    </div>
-                                                                </div>`;
-                                $('.add-url').append(linkListCardHtml);
+
+                    if (response.createUrlStatus) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top",
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.onmouseenter = Swal.stopTimer;
+                                toast.onmouseleave = Swal.resumeTimer;
                             }
+                        });
+                        Toast.fire({
+                            icon: "success",
+                            title: "Short URL created successfully..."
+                        });
 
-                            $('#createShortUrlSubmitBtn').prop('disabled', true);
-                            $('#availabilityMessage').addClass('d-none');
+                        var shortKeywordInLower = $('#shortKeyword').val().toLowerCase();
+                        // Dynamically add the new short URL to the list
+                        var localhost = "https://localhost:7063/";
+                        var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                    <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
+                                            <a onclick="RedirectToLongUrl('${localhost}${domain}/${shortKeywordInLower}')" class="text-decoration-underline">${localhost}${domain}/${shortKeywordInLower}</a>
+                                                        </div>`;
+
+                        if ($('#linkListCard').length) {
+                            $('#linkListCard .card-body').append(newLinkHtml);
+                        } else {
+                            var linkListCardHtml = `<div id="linkListCard" class="card">
+                                                                            <div class="card-header bg-primary ">
+                                                                                <h1 class="text-white">List of Links</h1>
+                                                                            </div>
+                                                                            <div class="card-body">
+                                                                                ${newLinkHtml}
+                                                                            </div>
+                                                                        </div>`;
+                            $('.add-url').append(linkListCardHtml);
                         }
-                    },
-                    error: function (error) {
+
+                        $('#createShortUrlSubmitBtn').prop('disabled', true);
+                        $('#availabilityMessage').addClass('d-none');
+
+                        $('#shortkeywordValidationMassage').text('');
+                        var longUrl = $('#longUrl').val('');
+                        var shortKeyword = $('#shortKeyword').val('');
+                        var availabilityMessage = $('#availabilityMessage');
+                        availabilityMessage.removeClass('text-danger text-success').empty();
+
+                    }
+                },
+                error: function (error) {
+                    if (error.responseJSON.message != null) {
+                        $('#shortkeywordValidationMassage').text(error.responseJSON.message);
+
+                    }
+                    else {
                         Swal.fire({
                             icon: "error",
                             title: "Oops...",
                             text: "An error occurred while trying to shorten the URL"
                         });
                     }
-                });
+
+                }
             });
         });
+    </script>
 
+    <script>
+        function RedirectToLongUrl(shortUrl) {
+            $.ajax({
+                url: '@Url.Action("RedirectToLongUrl", "Home")',
+                type: 'POST',
+                data: { shortUrl: shortUrl },
+                success: function (response) {
+                    if (response.longUrl) {
+                        window.open(response.longUrl, '_blank'); // Automatically open the long URL in a new tab
+                    } else {
+                        alert("Link broken");
+                    }
+                },
+                error: function () {
+                    alert("An error occurred. Please try again.");
+                }
+            });
+        }
     </script>
 }
