@@ -1,6 +1,9 @@
-﻿@model IList<Url>
+﻿
 @{
     ViewData["Title"] = "Home Page";
+
+    var allUrls = ViewBag.AllUrls as IEnumerable<Url>;
+    var cookies = ViewBag.Cookies as List<string>;
 }
 
 @section Styles {
@@ -47,7 +50,7 @@
     </div>
 
     <div class="col-md-4 add-url">
-        @if (Model != null && Model.Any())
+        @if (allUrls != null && allUrls.Any())
         {
             <div id="linkListCard" class="card">
                 <div class="card-header bg-primary ">
@@ -56,7 +59,7 @@
                 <div class="card-body">
                     @{
                         var linkCount = 1;
-                        foreach (var url in Model)
+                        foreach (var url in allUrls)
                         {
                                 <div class="d-flex align-items-center mb-2 border-bottom py-3">
                                     <span class="fw-bold me-3">@linkCount.</span>

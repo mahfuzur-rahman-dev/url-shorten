@@ -4,6 +4,7 @@ using UrlShorten.DataAccess.UnitOfWork;
 using UrlShorten.Models;
 using UrlShorten.Web.Models;
 
+
 namespace UrlShorten.Web.Controllers
 {
     public class HomeController : Controller
@@ -19,9 +20,16 @@ namespace UrlShorten.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
+            
             var allUrls = await _unitOfWork.Url.GetAllAsync();
             //var allShortUrl = allUrls.Select(link => link.ShortUrl).ToList();
-            return View(allUrls);
+
+            var cookies = await ReadCookie();
+
+            ViewBag.AllUrls = allUrls;
+            ViewBag.Cookies = cookies;
+
+            return View();
         }
 
         [HttpPost]
@@ -66,7 +74,10 @@ namespace UrlShorten.Web.Controllers
                     await _unitOfWork.Url.AddAsync(addUrl);
                     await _unitOfWork.SaveAsync();
 
+                    SetUrlInCookie(addUrl.ShortUrl, addUrl.Id);
+
                     // Prepare data for the success response
+
 
                     return Json(new { CreateUrlStatus = true }); // Return JSON with success status and short URL
                 }
@@ -90,11 +101,49 @@ namespace UrlShorten.Web.Controllers
             if (checkShortUrl == null)
                 return BadRequest(new { message = "Link broken" });
 
-            var longUrl = checkShortUrl.Select(x=>x.LongUrl).FirstOrDefault();
+            var longUrl = checkShortUrl.Select(x => x.LongUrl).FirstOrDefault();
 
             // Return the long URL as JSON
             return Json(new { longUrl = longUrl });
 
+        }
+
+        private void SetUrlInCookie(string shortUrl,Guid id)
+        {
+            CookieOptions options = new CookieOptions()
+            {
+                Domain = "localhost", // Set the domain for the cookie
+                Path = "/", // Cookie is available within the entire application
+                Secure = false, // Ensure the cookie is only sent over HTTPS (set to false for local development)
+                HttpOnly = true, // Prevent client-side scripts from accessing the cookie
+
+            };
+            string cookieName = $"UrlShorten_{id}";
+            // Append UserId to the cookies
+            Response.Cookies.Append(cookieName, shortUrl, options);
+
+        }
+
+        //private void ReadCookie(List<Guid> id)
+        //{
+        //    var allShortenUrl = Request.Cookies[$"UrlShorten_{id}"];
+        //}
+
+        public async Task<List<string>> ReadCookie()
+        {
+            string prefix = "UrlShorten_";
+            var cookies = Request.Cookies;
+            var values = new List<string>();
+
+            foreach (var cookie in cookies)
+            {
+                if (cookie.Key.StartsWith(prefix))
+                {
+                    values.Add(cookie.Value);
+                }
+            }
+
+            return values;
         }
 
 
