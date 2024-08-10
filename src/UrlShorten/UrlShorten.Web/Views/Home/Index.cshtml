@@ -4,6 +4,7 @@
 
     var allUrls = ViewBag.AllUrls as IEnumerable<Url>;
     var cookies = ViewBag.Cookies as List<string>;
+    
 }
 
 @section Styles {
@@ -44,6 +45,21 @@
                         </div>
                     </div>
                     <button id="createShortUrlSubmitBtn" type="button" class="btn btn-primary w-100 py-3" disabled>Create short url</button>
+
+                    <div id="visitQrCopyDiv" class="row justify-content-center mt-3 d-none" >
+                        <div id="visitShortUrl" onclick="VisitShortUrl(this)" value="abc" class="col-3 col-md-3 btn btn-outline-success py-3 m-2 border border-dark fw-bold">
+                            <i class="align-middle me-2" data-feather="activity"></i>Visit
+                        </div>
+                        <div id="generateQR" onclick="GenerateQR()" class="col-3 col-md-3 btn btn-outline-success py-3 m-2 border border-dark fw-bold">
+                            <i class="align-middle me-2" data-feather="target"></i>&nbsp;QR
+                        </div>
+
+                        <div id="copyShortUrl" onclick="CopyShortUrl()"  class="col-3 col-md-3 btn btn-outline-success py-3 m-2 border border-dark fw-bold">
+                            <i class="align-middle me-2" data-feather="copy"></i>&nbsp;Copy
+                        </div>
+
+                        <button onclick="CreateNewBtn()" type="button" class="btn btn-primary w-100 py-3 mt-3"><i class="align-middle me-2" data-feather="help-circle"></i>&nbsp;Create new ?</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,10 +77,10 @@
                         var linkCount = 1;
                         foreach (var url in allUrls)
                         {
-                                <div class="d-flex align-items-center mb-2 border-bottom py-3">
-                                    <span class="fw-bold me-3">@linkCount.</span>
-                                <a  onclick="RedirectToLongUrl('@url.ShortUrl')"  class="text-decoration-underline">@url.ShortUrl</a>
-                                </div>
+                                    <div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                        <span class="fw-bold me-3">@linkCount.</span>
+                                    <a  onclick="RedirectToLongUrl('@url.ShortUrl')"  class="text-decoration-underline">@url.ShortUrl</a>
+                                    </div>
                             linkCount++;
                         }
                     }
@@ -74,7 +90,24 @@
     </div>
 </div>
 
+
+<!-- Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrModalLabel">QR Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                <div id="qrcode"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
             $('#checkAvailabilityBtn').click(function () {
                 // Capture input data
@@ -107,7 +140,7 @@
                         // Handle successful response
                         var availabilityMessage = $('#availabilityMessage');
                         var submitBtn = $('#createShortUrlSubmitBtn');
-                        $('#shortkeywordValidationMassage').text('')
+                        $('#shortkeywordValidationMassage').text('');
                         
                         if (response.available == true) {
                             availabilityMessage.html('<i class="align-middle me-2" data-feather="check-circle"></i> Available')
@@ -142,11 +175,16 @@
     </script>
 
     <script>
+        let SHORTURL = null;
         $('#createShortUrlSubmitBtn').click(function () {
             // Capture input data
             var longUrl = $('#longUrl').val();
             var shortKeyword = $('#shortKeyword').val();
             var domain = $('#domain').val();
+            var shortKeywordInLower = $('#shortKeyword').val().toLowerCase();
+            var localhost = "https://localhost:7063/";
+            SHORTURL = localhost + domain + "/" + shortKeywordInLower;
+            
 
             var avc = "abc";
             // Create short url ajax request...
@@ -176,11 +214,12 @@
                         Toast.fire({
                             icon: "success",
                             title: "Short URL created successfully..."
-                        });
+                        });                        
 
-                        var shortKeywordInLower = $('#shortKeyword').val().toLowerCase();
+                        // var shortKeywordInLower = $('#shortKeyword').val().toLowerCase();
+                        
                         // Dynamically add the new short URL to the list
-                        var localhost = "https://localhost:7063/";
+                                               
                         var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
                                     <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
                                             <a onclick="RedirectToLongUrl('${localhost}${domain}/${shortKeywordInLower}')" class="text-decoration-underline">${localhost}${domain}/${shortKeywordInLower}</a>
@@ -204,10 +243,16 @@
                         $('#availabilityMessage').addClass('d-none');
 
                         $('#shortkeywordValidationMassage').text('');
-                        var longUrl = $('#longUrl').val('');
-                        var shortKeyword = $('#shortKeyword').val('');
+                        // var longUrl = $('#longUrl').val('');
+                        $('#longUrl').prop('disabled', true);
+                        // var shortKeyword = $('#shortKeyword').val('');
+                        var shortKeyword = $('#shortKeyword').prop('disabled', true);
+                        $('#checkAvailabilityBtn').prop('disabled', true);
+
+                        // var availabilityMessage = $('#availabilityMessage');
                         var availabilityMessage = $('#availabilityMessage');
                         availabilityMessage.removeClass('text-danger text-success').empty();
+                        $('#visitQrCopyDiv').removeClass('d-none');
 
                     }
                 },
@@ -227,9 +272,31 @@
                 }
             });
         });
-    </script>
+ 
+        function VisitShortUrl() {
+            RedirectToLongUrl(SHORTURL);
+        }
+        
+        function CopyShortUrl() {
+            // copy the url to the machine clipboard which is in SHORTURL;
+            navigator.clipboard.writeText(SHORTURL);
+            const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.onmouseenter = Swal.stopTimer;
+                                toast.onmouseleave = Swal.resumeTimer;
+                            }
+                        });
+                        Toast.fire({
+                            icon: "success",
+                            title: "Copied link successfully"
+                        }); 
+        }
 
-    <script>
         function RedirectToLongUrl(shortUrl) {
             $.ajax({
                 url: '@Url.Action("RedirectToLongUrl", "Home")',
@@ -247,5 +314,41 @@
                 }
             });
         }
+
+        function CreateNewBtn(){
+             $('#longUrl').prop('disabled', false).val('');
+            $('#shortKeyword').val('').prop('disabled', false);
+            $('#shortkeywordValidationMassage').text('');
+            $('#checkAvailabilityBtn').prop('disabled', false);
+            var availabilityMessage = $('#availabilityMessage');
+            availabilityMessage.removeClass('text-danger text-success').empty();
+            $('#createShortUrlSubmitBtn').prop('disabled', true);
+            $('#visitQrCopyDiv').addClass('d-none').empty();
+
+        }
+
+
+       /*  const shortUrl = SHORTURL; */ // Replace with your short URL
+
+        function GenerateQR() {
+            // Clear previous QR code
+            document.getElementById("qrcode").innerHTML = "";
+
+            // Generate new QR code
+            new QRCode(document.getElementById("qrcode"), {
+                text: SHORTURL,
+                width: 128, // width of the QR code
+                height: 128, // height of the QR code
+                colorDark : "#000000", // Dark color
+                colorLight : "#ffffff", // Light color
+                correctLevel : QRCode.CorrectLevel.H // Error correction level
+            });
+
+            // Show the modal
+            var qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+            qrModal.show();
+        }
     </script>
+
+       
 }
