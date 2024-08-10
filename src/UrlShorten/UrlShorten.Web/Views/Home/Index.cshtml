@@ -4,7 +4,8 @@
 
     var allUrls = ViewBag.AllUrls as IEnumerable<Url>;
     var cookies = ViewBag.Cookies as List<string>;
-    
+    var userName = ViewBag.UserName;
+
 }
 
 @section Styles {
@@ -73,14 +74,20 @@
                     <h1 class="text-white">List of Links</h1>
                 </div>
                 <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    
+                   
                     @{
+                        if(userName is null)
+                        {
+                            <div class="alert alert-warning" role="alert">Your are not logged in. Please <a asp-controller="Account" asp-action="Login">Login</a> to save your urls permanently..</div>
+                        }
                         var linkCount = 1;
                         foreach (var url in allUrls)
                         {
-                                    <div class="d-flex align-items-center mb-2 border-bottom py-3">
-                                        <span class="fw-bold me-3">@linkCount.</span>
-                                    <a  onclick="RedirectToLongUrl('@url.ShortUrl')"  class="text-decoration-underline">@url.ShortUrl</a>
-                                    </div>
+                                        <div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                            <span class="fw-bold me-3">@linkCount.</span>
+                                        <a  onclick="RedirectToLongUrl('@url.ShortUrl')"  class="text-decoration-underline">@url.ShortUrl</a>
+                                        </div>
                             linkCount++;
                         }
                     }
@@ -348,6 +355,13 @@
             var qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
             qrModal.show();
         }
+
+        $(document).ready(function () {
+            let userName = '@userName';
+            if (userName != null) {
+                $('#UserName').text(userName);
+            }
+        });
     </script>
 
        

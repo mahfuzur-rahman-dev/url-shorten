@@ -1,5 +1,6 @@
 ﻿@model RegisterViewModel
 @{
+    ViewData["Title"] = "Register";
     Layout = "_Layout_signIn_SignUp";
 }
 
@@ -61,6 +62,9 @@
             </div>
             <div class="text-center mb-3">
                 Already have an account? <a asp-controller="Account" asp-action="Login">Log In</a>
+            </div>
+            <div class="text-center mb-3">
+                <h1 class="text-success ">Continue without Register? <a class="text-decoration-underline" asp-controller="Home" asp-action="Index">Short an Url</a></h1>
             </div>
         </div>
     </div>

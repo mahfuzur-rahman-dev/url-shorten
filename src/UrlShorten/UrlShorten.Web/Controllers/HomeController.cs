@@ -30,7 +30,14 @@ namespace UrlShorten.Web.Controllers
             if (IsUserLoggedIn())
             {
                 var userId = _userManager.GetUserId(User);
+                var user = await _unitOfWork.User.GetByIdAsync(Guid.Parse(userId));
+                if (user != null)
+                    ViewBag.UserName = user.Name;
+                else
+                    ViewBag.UserName = null;
                 ViewBag.UserId = userId; // Pass UserId to the view
+                ViewBag.user = userId; // Pass UserId to the view
+
             }
 
             var cookies = await ReadCookie();

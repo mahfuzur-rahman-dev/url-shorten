@@ -28,7 +28,11 @@
 
 				<div class="navbar-collapse collapse">
 					<ul class="navbar-nav navbar-align">
-						<partial name="_PartialFiles/_ProfileOptionsPartial" />
+						@if (User.Identity.IsAuthenticated)
+						{
+							var userName = User.Identity.Name;
+							<partial name="_PartialFiles/_ProfileOptionsPartial" />
+						}
 					</ul>
 				</div>
 			</nav>

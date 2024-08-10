@@ -10,6 +10,7 @@ namespace UrlShorten.DataAccess.UnitOfWork
     public interface IUnitOfWork
     {
         IUrlRepository Url { get; }
+        IUserRepository User { get; }
 
         Task SaveAsync();
     }
