@@ -24,8 +24,17 @@ namespace UrlShorten.Web.Controllers
         }
         public IActionResult Register()
         {
+            var status = IsUserLoggedIn();
+			if(status)
+				return RedirectToAction("UserLoggedIn");
+
             var registerViewModel = new RegisterViewModel();
             return View(registerViewModel);
+        }
+
+        private bool IsUserLoggedIn()
+        {
+            return User.Identity?.IsAuthenticated ?? false;
         }
 
         [HttpPost]
@@ -93,6 +102,10 @@ namespace UrlShorten.Web.Controllers
 
 		public IActionResult Login()
         {
+            var status = IsUserLoggedIn();
+            if (status)
+                return RedirectToAction("UserLoggedIn");
+
             var loginViewModel = new LoginViewModel();
             return View(loginViewModel);
         }
@@ -132,6 +145,12 @@ namespace UrlShorten.Web.Controllers
             TempData["Success"] = "You have been logged out.";
             return RedirectToAction("Login");
         }
+
+		[Authorize]
+		public async Task<IActionResult> UserLoggedIn()
+		{
+			return View();
+		}
     }
 
 

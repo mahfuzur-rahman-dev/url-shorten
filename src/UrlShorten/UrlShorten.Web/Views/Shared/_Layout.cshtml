@@ -22,13 +22,13 @@
 
 		<div class="main">
 			<nav class="navbar navbar-expand navbar-light navbar-bg">
-				<a class="sidebar-toggle js-sidebar-toggle">
-					<i class="hamburger align-self-center"></i>
-				</a>
+				<div class="navbar-collapse collapse" style="display: flex; justify-content: right; margin-right:45px;">
+					<h2 class="text-center fw-bold">Url Shorten</h2>
+				</div>
 
 				<div class="navbar-collapse collapse">
 					<ul class="navbar-nav navbar-align">
-						@* <partial name="_PartialFiles/_ProfileOptionsPartial" /> *@
+						<partial name="_PartialFiles/_ProfileOptionsPartial" />
 					</ul>
 				</div>
 			</nav>
@@ -48,7 +48,6 @@
 	<script src="~/adminkit/js/app.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script src="~/lib/jquery/dist/jquery.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="~/custom/JavaScript.js"></script>
 	@await RenderSectionAsync("Scripts", required: false)
 </body>
