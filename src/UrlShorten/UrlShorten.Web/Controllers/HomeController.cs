@@ -35,17 +35,18 @@ namespace UrlShorten.Web.Controllers
                     ViewBag.UserName = user.Name;
                 else
                     ViewBag.UserName = null;
-                ViewBag.UserId = userId; // Pass UserId to the view
-                ViewBag.user = userId; // Pass UserId to the view
+
+                ViewBag.AllUrls = allUrls; // Pass UserId to the view
+
+                return View();
 
             }
 
             var cookies = await ReadCookie();
 
-            ViewBag.AllUrls = allUrls;
+            ViewBag.AllUrls = null;
             ViewBag.Cookies = cookies;
-
-            var status = IsUserLoggedIn();
+            ViewBag.UserName = null;
 
             return View();
         }
@@ -75,8 +76,11 @@ namespace UrlShorten.Web.Controllers
             if (request is null)
                 return BadRequest();
 
+            var cookiesCount = await ReadCookieCount();
+            
+
             if (ModelState.IsValid)
-            {
+            {                    
                 try
                 {
                     var addUrl = new Url
@@ -88,6 +92,17 @@ namespace UrlShorten.Web.Controllers
                         CreatedDateTime = DateTime.Now,
                         UpdatedDateTime = DateTime.Now
                     };
+
+                    if (!IsUserLoggedIn() && cookiesCount<3)
+                    {
+                        SetUrlInCookie(addUrl.ShortUrl,null);
+                        return Json(new { CreateUrlStatus = true });
+                    }
+                    if (!IsUserLoggedIn() && cookiesCount > 3)
+                    {
+                        return BadRequest(new {massage = "Please login to create more." });
+                    }
+
 
                     await _unitOfWork.Url.AddAsync(addUrl);
                     await _unitOfWork.SaveAsync();
@@ -107,7 +122,7 @@ namespace UrlShorten.Web.Controllers
             }
             else
             {
-                return BadRequest(new { message = "There cannot be empty space and length should be between 4 and 15" });
+                return BadRequest(new { message = "Server error.." });
             }
 
         }
@@ -126,8 +141,9 @@ namespace UrlShorten.Web.Controllers
 
         }
 
-        private void SetUrlInCookie(string shortUrl,Guid id)
+        private async Task SetUrlInCookie(string shortUrl,Guid? id)
         {
+            string cookieName = string.Empty;
             CookieOptions options = new CookieOptions()
             {
                 Domain = "localhost", // Set the domain for the cookie
@@ -136,16 +152,19 @@ namespace UrlShorten.Web.Controllers
                 HttpOnly = true, // Prevent client-side scripts from accessing the cookie
 
             };
-            string cookieName = $"UrlShorten_{id}";
+            if(id == null)
+            {
+                var cookiesCount =await ReadCookieCount();
+                cookieName = $"UrlShorten_{cookiesCount}";
+            }            
+            else
+                cookieName = $"UrlShorten_{id}";
+
+
             // Append UserId to the cookies
             Response.Cookies.Append(cookieName, shortUrl, options);
 
         }
-
-        //private void ReadCookie(List<Guid> id)
-        //{
-        //    var allShortenUrl = Request.Cookies[$"UrlShorten_{id}"];
-        //}
 
         public async Task<List<string>> ReadCookie()
         {
@@ -162,6 +181,23 @@ namespace UrlShorten.Web.Controllers
             }
 
             return values;
+        }
+
+        public async Task<int> ReadCookieCount()
+        {
+            string prefix = "UrlShorten_";
+            var cookies = Request.Cookies;
+            int count = 0;
+
+            foreach (var cookie in cookies)
+            {
+                if (cookie.Key.StartsWith(prefix))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
 
