@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using UrlShorten.ApplicationIdentity.Manager;
 using UrlShorten.DataAccess.UnitOfWork;
 using UrlShorten.Models;
 using UrlShorten.Web.Models;
@@ -11,11 +13,13 @@ namespace UrlShorten.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<ApplicationIdentityUser> _userManager; // Inject UserManager
 
-        public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork)
+        public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationIdentityUser> userManager)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -23,11 +27,18 @@ namespace UrlShorten.Web.Controllers
             
             var allUrls = await _unitOfWork.Url.GetAllAsync();
             //var allShortUrl = allUrls.Select(link => link.ShortUrl).ToList();
+            if (IsUserLoggedIn())
+            {
+                var userId = _userManager.GetUserId(User);
+                ViewBag.UserId = userId; // Pass UserId to the view
+            }
 
             var cookies = await ReadCookie();
 
             ViewBag.AllUrls = allUrls;
             ViewBag.Cookies = cookies;
+
+            var status = IsUserLoggedIn();
 
             return View();
         }
@@ -156,6 +167,11 @@ namespace UrlShorten.Web.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        private bool IsUserLoggedIn()
+        {
+            return User.Identity?.IsAuthenticated ?? false;
         }
     }
 }

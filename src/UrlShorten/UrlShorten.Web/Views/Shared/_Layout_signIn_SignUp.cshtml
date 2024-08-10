@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - IDE</title>
+
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+
+	<link rel="shortcut icon" href="~/adminkit/img/logo/" />
+
+	<link href="~/adminkit/css/app.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+	@await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+	<div class="wrapper">
+
+		<div class="main">
+
+			<main class="content">
+				<div class="container-fluid p-0">
+					@RenderBody()
+				</div>
+			</main>
+
+			<footer class="footer">
+				<partial name="_PartialFiles/_FooterPartial" />
+			</footer>
+		</div>
+	</div>
+
+	<script src="~/adminkit/js/app.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://kit.fontawesome.com/45b272e4b0.js" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	@await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

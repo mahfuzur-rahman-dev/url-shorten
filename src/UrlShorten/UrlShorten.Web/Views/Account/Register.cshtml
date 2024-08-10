@@ -1,0 +1,117 @@
+﻿@model RegisterViewModel
+@{
+    Layout = "_Layout_signIn_SignUp";
+}
+
+<div class="row vh-90">
+    <div class="col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto d-table h-100">
+        <div class="d-table-cell align-middle">
+            <div class="text-center mt-4">
+                <h1 class="h2">Sign Up</h1>
+                <p class="lead">
+                    Short your Url smartly...!
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="m-sm-3">
+                        <form asp-controller="Account" asp-action="Register" asp-antiforgery="true">
+                            <partial name="_ValidationScriptsPartial" />
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="Name"></label>
+                                <input class="form-control form-control-lg" type="text" name="name" placeholder="Enter your name" asp-for="Name" required />
+                                <span class="text-danger" asp-validation-for="Name"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="Email"></label>
+                                <input class="form-control form-control-lg" type="email" name="email" placeholder="Enter your email" asp-for="Email" required />
+                                <span class="text-danger" asp-validation-for="Email"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="Password"></label>
+                                <div class="input-group">
+                                    <input class="form-control form-control-lg" type="password" name="password" placeholder="Enter password" asp-for="Password" id="password" required />
+                                    <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
+                                        <i class="far fa-eye"></i>
+                                    </span>
+                                </div>
+                                <span class="text-danger" asp-validation-for="Password"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" asp-for="ConfirmPassword"></label>
+                                <div class="input-group">
+                                    <input class="form-control form-control-lg" type="password" name="confirmpassword" placeholder="Enter password again" asp-for="ConfirmPassword" id="confirmPassword" required />
+                                    <span class="input-group-text" id="toggleConfirmPassword" style="cursor: pointer;">
+                                        <i class="far fa-eye"></i>
+                                    </span>
+                                </div>
+                                <span class="text-danger" asp-validation-for="ConfirmPassword"></span>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input  id="customControlInline" type="checkbox" class="form-check-input" name="rememberMe" asp-for="RememberMe" />
+                                <label class="form-check-label" for="rememberMe">Remember Me</label>
+                            </div>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="submit" class="btn btn-lg btn-primary">Sign up</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mb-3">
+                Already have an account? <a asp-controller="Account" asp-action="Login">Log In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            var passwordField = document.getElementById('password');
+            var type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            this.firstChild.classList.toggle('fa-eye-slash');
+        });
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function () {
+            var confirmPasswordField = document.getElementById('confirmPassword');
+            var type = confirmPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPasswordField.setAttribute('type', type);
+            this.firstChild.classList.toggle('fa-eye-slash');
+        });
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var errorMessage = '@TempData["Error"]';
+            var successMessage = '@TempData["Success"]';
+            if (errorMessage) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: errorMessage,
+                    confirmButtonText: "Try Again"
+                });
+            }
+            if (successMessage) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                });
+                Toast.fire({
+                    icon: "success",
+                    title: successMessage
+                });
+            }
+        });
+    </script>
+}
+
