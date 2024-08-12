@@ -24,25 +24,22 @@ namespace UrlShorten.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            
-            var allUrls = await _unitOfWork.Url.GetAllAsync();
-            //var allShortUrl = allUrls.Select(link => link.ShortUrl).ToList();
             if (IsUserLoggedIn())
             {
                 var userId = _userManager.GetUserId(User);
                 var user = await _unitOfWork.User.GetByIdAsync(Guid.Parse(userId));
-                if (user != null)
-                    ViewBag.UserName = user.Name;
-                else
-                    ViewBag.UserName = null;
 
-                ViewBag.AllUrls = allUrls; // Pass UserId to the view
+                var allUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId ==user.Id);
+
+                ViewBag.UserName = user.Name;
+                ViewBag.AllUrls = allUrls;
+                ViewBag.Cookies = null;
 
                 return View();
 
             }
 
-            var cookies = await ReadCookie();
+            var cookies = await ReadCookie("FreeUrlShorten_");
 
             ViewBag.AllUrls = null;
             ViewBag.Cookies = cookies;
@@ -63,9 +60,7 @@ namespace UrlShorten.Web.Controllers
                     return Json(new { Available = true });
             }
             else
-            {
                 return BadRequest(new { message = "There cannot be empty space and length should be between 4 and 15" });
-            }
 
         }
 
@@ -74,28 +69,30 @@ namespace UrlShorten.Web.Controllers
         public async Task<IActionResult> CreateShortUrl(CreateShortUrlRequestModel request)
         {
             if (request is null)
-                return BadRequest();
-
-            var cookiesCount = await ReadCookieCount();
+                return BadRequest(new {massage ="No data found..!"});
             
-
             if (ModelState.IsValid)
             {                    
                 try
                 {
-                    var addUrl = new Url
-                    {
-                        LongUrl = request.LongUrl,
-                        Domain = request.Domain,
-                        ShortKeyword = request.ShortKeyword.ToLower(),
-                        ShortUrl = "https://localhost:7063/" + request.Domain + "/" + request.ShortKeyword.ToLower(),
-                        CreatedDateTime = DateTime.Now,
-                        UpdatedDateTime = DateTime.Now
-                    };
+                    var cookiesCount = await ReadCookieCount("FreeUrlShorten_");
 
                     if (!IsUserLoggedIn() && cookiesCount<3)
                     {
-                        SetUrlInCookie(addUrl.ShortUrl,null);
+                        var addTempUrl = new TempUrl
+                        {
+                            LongUrl = request.LongUrl,
+                            Domain = request.Domain,
+                            ShortKeyword = request.ShortKeyword.ToLower(),
+                            ShortUrl = "https://localhost:7063/" + request.Domain + "/" + request.ShortKeyword.ToLower(),
+                            CreatedDateTime = DateTime.Now,
+                            UpdatedDateTime = DateTime.Now
+                        };
+
+                        SetUrlInCookie(addTempUrl.ShortUrl,null);
+                        await _unitOfWork.TempUrl.AddAsync(addTempUrl);
+                        await _unitOfWork.SaveAsync();
+
                         return Json(new { CreateUrlStatus = true });
                     }
                     if (!IsUserLoggedIn() && cookiesCount > 3)
@@ -103,14 +100,25 @@ namespace UrlShorten.Web.Controllers
                         return BadRequest(new {massage = "Please login to create more." });
                     }
 
+                    var userId = _userManager.GetUserId(User);
+                    var user = await _unitOfWork.User.GetByIdAsync(Guid.Parse(userId));
 
+                    if (user is null)
+                        return BadRequest(new {massage ="Internal Server error..."});
+
+                    var addUrl = new Url
+                    {
+                        LongUrl = request.LongUrl,
+                        Domain = request.Domain,
+                        ShortKeyword = request.ShortKeyword.ToLower(),
+                        ShortUrl = "https://localhost:7063/" + request.Domain + "/" + request.ShortKeyword.ToLower(),
+                        CreatedDateTime = DateTime.Now,
+                        UpdatedDateTime = DateTime.Now,
+                        UserId = user.Id
+                    };
+                    
                     await _unitOfWork.Url.AddAsync(addUrl);
                     await _unitOfWork.SaveAsync();
-
-                    SetUrlInCookie(addUrl.ShortUrl, addUrl.Id);
-
-                    // Prepare data for the success response
-
 
                     return Json(new { CreateUrlStatus = true }); // Return JSON with success status and short URL
                 }
@@ -122,7 +130,7 @@ namespace UrlShorten.Web.Controllers
             }
             else
             {
-                return BadRequest(new { message = "Server error.." });
+                return BadRequest(new { message = "Model state error.." });
             }
 
         }
@@ -154,8 +162,8 @@ namespace UrlShorten.Web.Controllers
             };
             if(id == null)
             {
-                var cookiesCount =await ReadCookieCount();
-                cookieName = $"UrlShorten_{cookiesCount}";
+                var cookiesCount =await ReadCookieCount("FreeUrlShorten_");
+                cookieName = $"FreeUrlShorten_{cookiesCount}";
             }            
             else
                 cookieName = $"UrlShorten_{id}";
@@ -166,9 +174,8 @@ namespace UrlShorten.Web.Controllers
 
         }
 
-        public async Task<List<string>> ReadCookie()
+        public async Task<List<string>> ReadCookie(string prefix)
         {
-            string prefix = "UrlShorten_";
             var cookies = Request.Cookies;
             var values = new List<string>();
 
@@ -183,9 +190,8 @@ namespace UrlShorten.Web.Controllers
             return values;
         }
 
-        public async Task<int> ReadCookieCount()
+        public async Task<int> ReadCookieCount(string prefix)
         {
-            string prefix = "UrlShorten_";
             var cookies = Request.Cookies;
             int count = 0;
 

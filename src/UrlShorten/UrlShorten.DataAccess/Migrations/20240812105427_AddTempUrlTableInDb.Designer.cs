@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UrlShorten.DataAccess.Context;
 
@@ -11,9 +12,11 @@ using UrlShorten.DataAccess.Context;
 namespace UrlShorten.DataAccess.Migrations
 {
     [DbContext(typeof(UrlShortenDbContext))]
-    partial class UrlShortenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240812105427_AddTempUrlTableInDb")]
+    partial class AddTempUrlTableInDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

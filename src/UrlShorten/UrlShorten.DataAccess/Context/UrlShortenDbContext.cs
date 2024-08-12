@@ -16,5 +16,6 @@ namespace UrlShorten.DataAccess.Context
 
         public DbSet<Url> Urls { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<TempUrl> TempUrls { get; set; }
     }
 }

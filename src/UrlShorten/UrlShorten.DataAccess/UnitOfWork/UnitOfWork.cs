@@ -13,6 +13,7 @@ namespace UrlShorten.DataAccess.UnitOfWork
     public class UnitOfWork : IUnitOfWork
     {
         public IUrlRepository Url {  get; set; }
+        public ITempUrlRepository TempUrl {  get; set; }
         public IUserRepository User {  get; set; }
 
 
@@ -22,6 +23,7 @@ namespace UrlShorten.DataAccess.UnitOfWork
             _context = context;
             Url = new UrlRepository(_context);
             User = new UserRepository(_context);
+            TempUrl = new TempUrlRepository(_context);
 
         }
 

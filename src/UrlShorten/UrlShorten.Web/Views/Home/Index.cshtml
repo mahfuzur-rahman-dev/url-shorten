@@ -124,7 +124,17 @@
             </div>
         }
     </div>
+    @{
+        if (userName is null)
+        {
+            <div class="text-center mb-3">
+                <h5 class="text-success">Lets start with login? <a class="text-decoration-underline" asp-controller="Account" asp-action="Login">Login</a></h5>
+            </div>
+        }
+    }
+   
 </div>
+
 
 
 <!-- Modal -->
@@ -164,6 +174,7 @@
             // Show the loader
             $('#loader').removeClass('d-none');
             $('#checkAvailabilityBtn').addClass('d-none');
+            $('#availabilityMessage').removeClass('text-danger text-success');
 
             $.ajax({
                 url: '/Home/CheckShortKeywordAvailability',
@@ -257,21 +268,21 @@
                         // Dynamically add the new short URL to the list
 
                         var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
-                                            <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
-                                                    <a onclick="RedirectToLongUrl('${localhost}${domain}/${shortKeywordInLower}')" class="text-decoration-underline">${localhost}${domain}/${shortKeywordInLower}</a>
-                                                                </div>`;
+                                                    <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
+                                                            <a onclick="RedirectToLongUrl('${localhost}${domain}/${shortKeywordInLower}')" class="text-decoration-underline">${localhost}${domain}/${shortKeywordInLower}</a>
+                                                                        </div>`;
 
                         if ($('#linkListCard').length) {
                             $('#linkListCard .card-body').append(newLinkHtml);
                         } else {
                             var linkListCardHtml = `<div id="linkListCard" class="card">
-                                                                                    <div class="card-header bg-primary ">
-                                                                                        <h1 class="text-white">List of Links</h1>
-                                                                                    </div>
-                                                                                    <div class="card-body">
-                                                                                        ${newLinkHtml}
-                                                                                    </div>
-                                                                                </div>`;
+                                                                                            <div class="card-header bg-primary ">
+                                                                                                <h1 class="text-white">List of Links</h1>
+                                                                                            </div>
+                                                                                            <div class="card-body">
+                                                                                                ${newLinkHtml}
+                                                                                            </div>
+                                                                                        </div>`;
                             $('.add-url').append(linkListCardHtml);
                         }
 
