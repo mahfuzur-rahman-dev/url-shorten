@@ -11,8 +11,17 @@
 
 }
 
+
 <div class="row">
-    <div class="col-md-8 py-3">
+    @{
+        if (userName is null)
+        {
+            <div class="text-center mb-3">
+                <h5 class="text-success">Lets start with login? <a class="text-decoration-underline" asp-controller="Account" asp-action="Login">Login</a></h5>
+            </div>
+        }
+    }
+    <div class="col-md-8">
         <div class="row justify-content-center">
             <div class="col-lg-10 col-md-10 col-sm-12">
                 <div class="p-4 border rounded">
@@ -124,14 +133,7 @@
             </div>
         }
     </div>
-    @{
-        if (userName is null)
-        {
-            <div class="text-center mb-3">
-                <h5 class="text-success">Lets start with login? <a class="text-decoration-underline" asp-controller="Account" asp-action="Login">Login</a></h5>
-            </div>
-        }
-    }
+    
    
 </div>
 
@@ -357,7 +359,11 @@
                     }
                 },
                 error: function () {
-                    alert("An error occurred. Please try again.");
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        html: error.responseJSON.massage
+                    });
                 }
             });
         }

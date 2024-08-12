@@ -15,6 +15,7 @@ namespace UrlShorten.DataAccess.Repository.IRepository
         Task<IList<TEntity>> GetAsync(Expression<Func<TEntity, bool>> filter = null);
         Task<TEntity> GetByIdAsync(TKey id);
         Task<int> GetCountAsync(Expression<Func<TEntity, bool>> filter = null);
+        Task<TEntity> Get(Expression<Func<TEntity, bool>> filter = null);
         void Remove(TEntity entityToDelete);
         void Remove(TKey id);
         void Remove(Expression<Func<TEntity, bool>> filter);

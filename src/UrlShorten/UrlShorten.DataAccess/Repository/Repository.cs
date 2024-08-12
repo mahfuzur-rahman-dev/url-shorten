@@ -70,5 +70,15 @@ namespace UrlShorten.DataAccess.Repository
         {
             _dbSet.RemoveRange(_dbSet.Where(filter));
         }
+
+        public async Task<TEntity> Get(Expression<Func<TEntity, bool>> filter = null)
+        {
+            if (filter != null)
+            {
+                return await _dbSet.SingleOrDefaultAsync(filter);
+            }
+
+            return null; // Or throw an exception if filter is required
+        }
     }
 }

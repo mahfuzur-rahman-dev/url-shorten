@@ -1,3 +1,4 @@
+using UrlShorten.Web.Others;
 using WorkHub.Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,8 @@ builder.Services.AddDatabaseConfig(builder.Configuration);
 builder.Services.AddIdentityConfiguration(builder.Configuration);
 builder.Services.RegisterWebServices();
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CookieManagement>();
 
 var app = builder.Build();
 

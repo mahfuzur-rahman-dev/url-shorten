@@ -5,6 +5,7 @@ using UrlShorten.ApplicationIdentity.Manager;
 using UrlShorten.DataAccess.UnitOfWork;
 using UrlShorten.Models;
 using UrlShorten.Web.Models;
+using UrlShorten.Web.Others;
 
 
 namespace UrlShorten.Web.Controllers
@@ -13,21 +14,28 @@ namespace UrlShorten.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<ApplicationIdentityUser> _userManager; // Inject UserManager
+        private readonly UserManager<ApplicationIdentityUser> _userManager;
+        private readonly CookieManagement _cookieManagement;
 
-        public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationIdentityUser> userManager)
+        public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationIdentityUser> userManager,CookieManagement cookieManagement)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _cookieManagement = cookieManagement;
         }
 
         public async Task<IActionResult> Index()
         {
+            var cookies = await _cookieManagement.ReadCookie("FreeUrlShorten_");
+
             if (IsUserLoggedIn())
             {
                 var userId = _userManager.GetUserId(User);
                 var user = await _unitOfWork.User.GetByIdAsync(Guid.Parse(userId));
+
+                if(cookies is not null)
+                    await _cookieManagement.CopyTheCookieUrls(user.Id,cookies);
 
                 var allUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId ==user.Id);
 
@@ -39,7 +47,7 @@ namespace UrlShorten.Web.Controllers
 
             }
 
-            var cookies = await ReadCookie("FreeUrlShorten_");
+            
 
             ViewBag.AllUrls = null;
             ViewBag.Cookies = cookies;
@@ -53,8 +61,9 @@ namespace UrlShorten.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var checkShortKeyword = await _unitOfWork.Url.GetCountAsync(x => x.ShortKeyword == request.ShortKeyword.ToLower());
-                if (checkShortKeyword > 0)
+                var checkShortKeywordUrltable = await _unitOfWork.Url.GetCountAsync(x => x.ShortKeyword == request.ShortKeyword.ToLower());
+                var checkShortKeywordTempUrlTable = await _unitOfWork.TempUrl.GetCountAsync(x => x.ShortKeyword == request.ShortKeyword.ToLower());
+                if (checkShortKeywordUrltable > 0 || checkShortKeywordTempUrlTable > 0)
                     return Json(new { Available = false });
                 else
                     return Json(new { Available = true });
@@ -75,7 +84,7 @@ namespace UrlShorten.Web.Controllers
             {                    
                 try
                 {
-                    var cookiesCount = await ReadCookieCount("FreeUrlShorten_");
+                    var cookiesCount = await _cookieManagement.ReadCookieCount("FreeUrlShorten_");
 
                     if (!IsUserLoggedIn() && cookiesCount<3)
                     {
@@ -89,13 +98,13 @@ namespace UrlShorten.Web.Controllers
                             UpdatedDateTime = DateTime.Now
                         };
 
-                        SetUrlInCookie(addTempUrl.ShortUrl,null);
+                        _cookieManagement.SetUrlInCookie(addTempUrl.ShortUrl,null);
                         await _unitOfWork.TempUrl.AddAsync(addTempUrl);
                         await _unitOfWork.SaveAsync();
 
                         return Json(new { CreateUrlStatus = true });
                     }
-                    if (!IsUserLoggedIn() && cookiesCount > 3)
+                    if (!IsUserLoggedIn() && cookiesCount > 2)
                     {
                         return BadRequest(new {massage = "Please login to create more." });
                     }
@@ -138,74 +147,21 @@ namespace UrlShorten.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> RedirectToLongUrl(string shortUrl)
         {
-            var checkShortUrl = await _unitOfWork.Url.GetAsync(x => x.ShortUrl == shortUrl);
-            if (checkShortUrl == null)
+            var checkShortUrlInUrlTable = await _unitOfWork.Url.GetAsync(x => x.ShortUrl == shortUrl);
+            var checkShortUrlInTempUrlTable = await _unitOfWork.TempUrl.GetAsync(x => x.ShortUrl == shortUrl);
+            if (checkShortUrlInUrlTable == null && checkShortUrlInTempUrlTable==null)
                 return BadRequest(new { message = "Link broken" });
 
-            var longUrl = checkShortUrl.Select(x => x.LongUrl).FirstOrDefault();
+            var longUrl = checkShortUrlInUrlTable.Select(x => x.LongUrl).FirstOrDefault();
+            if(longUrl == null)
+                longUrl = checkShortUrlInTempUrlTable.Select(x => x.LongUrl).FirstOrDefault();
 
-            // Return the long URL as JSON
+            if(longUrl == null)
+                return BadRequest(new { massage = "Internal server error" });
+
             return Json(new { longUrl = longUrl });
 
         }
-
-        private async Task SetUrlInCookie(string shortUrl,Guid? id)
-        {
-            string cookieName = string.Empty;
-            CookieOptions options = new CookieOptions()
-            {
-                Domain = "localhost", // Set the domain for the cookie
-                Path = "/", // Cookie is available within the entire application
-                Secure = false, // Ensure the cookie is only sent over HTTPS (set to false for local development)
-                HttpOnly = true, // Prevent client-side scripts from accessing the cookie
-
-            };
-            if(id == null)
-            {
-                var cookiesCount =await ReadCookieCount("FreeUrlShorten_");
-                cookieName = $"FreeUrlShorten_{cookiesCount}";
-            }            
-            else
-                cookieName = $"UrlShorten_{id}";
-
-
-            // Append UserId to the cookies
-            Response.Cookies.Append(cookieName, shortUrl, options);
-
-        }
-
-        public async Task<List<string>> ReadCookie(string prefix)
-        {
-            var cookies = Request.Cookies;
-            var values = new List<string>();
-
-            foreach (var cookie in cookies)
-            {
-                if (cookie.Key.StartsWith(prefix))
-                {
-                    values.Add(cookie.Value);
-                }
-            }
-
-            return values;
-        }
-
-        public async Task<int> ReadCookieCount(string prefix)
-        {
-            var cookies = Request.Cookies;
-            int count = 0;
-
-            foreach (var cookie in cookies)
-            {
-                if (cookie.Key.StartsWith(prefix))
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
 
         public IActionResult Privacy()
         {
