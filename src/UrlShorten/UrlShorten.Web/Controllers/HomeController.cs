@@ -17,6 +17,7 @@ namespace UrlShorten.Web.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationIdentityUser> _userManager;
         private readonly CookieManagement _cookieManagement;
+        private  string LoggedInUserName = string.Empty;
 
         public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationIdentityUser> userManager,CookieManagement cookieManagement)
         {
@@ -32,10 +33,9 @@ namespace UrlShorten.Web.Controllers
 
             if (IsUserLoggedIn())
             {
-                var userId = _userManager.GetUserId(User);
-                var user = await _unitOfWork.User.GetByIdAsync(Guid.Parse(userId));
+                var user = await GetLoggedInUser();
 
-                if(cookies is not null)
+                if (cookies is not null)
                     await _cookieManagement.CopyTheCookieUrls(user.Id,cookies);
 
                 var allUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId ==user.Id);
@@ -169,21 +169,33 @@ namespace UrlShorten.Web.Controllers
         {
             if (IsUserLoggedIn())
             {
-                var userId = _userManager.GetUserId(User);
+                var getUser = await GetLoggedInUser();
                 //var userUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId == Guid.Parse(userId));
                 var userUrls = await _unitOfWork.Url.GetAsync();
                 if (userUrls == null)
                     return View();
                 
                 ViewBag.UserUrls = userUrls;
+                ViewBag.Name = LoggedInUserName;
+
 
                 return View();
 
             }
             {
                 ViewBag.UserUrls = null;
+                ViewBag.Name = null;
+
                 return View();
             }
+        }
+
+        private async Task<User> GetLoggedInUser()
+        {
+            var userId = _userManager.GetUserId(User);
+            var user = await _unitOfWork.User.GetByIdAsync(Guid.Parse(userId));
+            LoggedInUserName = user.Name;
+            return user;
         }
 
         public IActionResult Privacy()
