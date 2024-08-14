@@ -14,7 +14,7 @@
 
 <div class="row">
     @{
-        if (userName is null)
+        if (!User.Identity.IsAuthenticated)
         {
             <div class="text-center mb-3">
                 <h5 class="text-success">Lets start with login? <a class="text-decoration-underline" asp-controller="Account" asp-action="Login">Login</a></h5>

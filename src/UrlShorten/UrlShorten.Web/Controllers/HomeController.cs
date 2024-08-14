@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -161,6 +162,28 @@ namespace UrlShorten.Web.Controllers
 
             return Json(new { longUrl = longUrl });
 
+        }
+
+        [Authorize]
+        public async Task<IActionResult> MyUrls()
+        {
+            if (IsUserLoggedIn())
+            {
+                var userId = _userManager.GetUserId(User);
+                //var userUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId == Guid.Parse(userId));
+                var userUrls = await _unitOfWork.Url.GetAsync();
+                if (userUrls == null)
+                    return View();
+                
+                ViewBag.UserUrls = userUrls;
+
+                return View();
+
+            }
+            {
+                ViewBag.UserUrls = null;
+                return View();
+            }
         }
 
         public IActionResult Privacy()
