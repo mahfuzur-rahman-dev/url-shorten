@@ -170,8 +170,7 @@ namespace UrlShorten.Web.Controllers
             if (IsUserLoggedIn())
             {
                 var getUser = await GetLoggedInUser();
-                //var userUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId == Guid.Parse(userId));
-                var userUrls = await _unitOfWork.Url.GetAsync();
+                var userUrls = await _unitOfWork.Url.GetAsync(x=>x.UserId == getUser.Id);
                 if (userUrls == null)
                     return View();
                 
@@ -188,6 +187,34 @@ namespace UrlShorten.Web.Controllers
 
                 return View();
             }
+        }
+
+
+        public async Task<IActionResult> DeleteUrl(string id)
+        {
+            var getUser = await GetLoggedInUser();
+            if (getUser == null)
+                return BadRequest();
+            if(id is null)
+                return BadRequest();
+
+            var userUrl = await _unitOfWork.Url.GetByIdAsync(Guid.Parse(id));
+            if (userUrl == null)
+                return BadRequest();
+            try
+            {
+
+                _unitOfWork.Url.Remove(userUrl);
+                await _unitOfWork.SaveAsync();
+
+                return RedirectToAction("MyUrls");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return View();
         }
 
         private async Task<User> GetLoggedInUser()
