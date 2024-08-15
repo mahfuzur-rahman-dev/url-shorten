@@ -31,7 +31,7 @@
                     <div class="row mb-3">
                         <div class="col-md-3 mb-2 mb-sm-4">
                             <div class="form-group">
-                                <input type="text" class="form-control py-3" id="domain" value="shorten.com" disabled>
+                                <input type="text" class="form-control py-3" id="domain" value="https://localhost:7063/" disabled>
                             </div>
                         </div>
                         <div class="col-md-5 mb-2 mb-sm-4">
@@ -231,8 +231,7 @@
             var shortKeyword = $('#shortKeyword').val();
             var domain = $('#domain').val();
             var shortKeywordInLower = $('#shortKeyword').val().toLowerCase();
-            var localhost = "https://localhost:7063/";
-            SHORTURL = localhost + domain + "/" + shortKeywordInLower;
+            SHORTURL = domain  + shortKeywordInLower;
 
 
             var avc = "abc";
@@ -271,7 +270,7 @@
 
                         var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
                                                     <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
-                                                            <a onclick="RedirectToLongUrl('${localhost}${domain}/${shortKeywordInLower}')" class="text-decoration-underline">${localhost}${domain}/${shortKeywordInLower}</a>
+                                                            <a onclick="RedirectToLongUrl('${domain}${shortKeywordInLower}')" class="text-decoration-underline">${domain}${shortKeywordInLower}</a>
                                                                         </div>`;
 
                         if ($('#linkListCard').length) {
@@ -292,13 +291,10 @@
                         $('#availabilityMessage').addClass('d-none');
 
                         $('#shortkeywordValidationMassage').text('');
-                        // var longUrl = $('#longUrl').val('');
                         $('#longUrl').prop('disabled', true);
-                        // var shortKeyword = $('#shortKeyword').val('');
                         var shortKeyword = $('#shortKeyword').prop('disabled', true);
                         $('#checkAvailabilityBtn').prop('disabled', true);
 
-                        // var availabilityMessage = $('#availabilityMessage');
                         var availabilityMessage = $('#availabilityMessage');
                         availabilityMessage.removeClass('text-danger text-success').empty();
                         $('#visitQrCopyDiv').removeClass('d-none');

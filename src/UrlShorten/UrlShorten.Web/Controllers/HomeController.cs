@@ -94,7 +94,7 @@ namespace UrlShorten.Web.Controllers
                             LongUrl = request.LongUrl,
                             Domain = request.Domain,
                             ShortKeyword = request.ShortKeyword.ToLower(),
-                            ShortUrl = "https://localhost:7063/" + request.Domain + "/" + request.ShortKeyword.ToLower(),
+                            ShortUrl = request.Domain  + request.ShortKeyword.ToLower(),
                             CreatedDateTime = DateTime.Now,
                             UpdatedDateTime = DateTime.Now
                         };
@@ -121,7 +121,7 @@ namespace UrlShorten.Web.Controllers
                         LongUrl = request.LongUrl,
                         Domain = request.Domain,
                         ShortKeyword = request.ShortKeyword.ToLower(),
-                        ShortUrl = "https://localhost:7063/" + request.Domain + "/" + request.ShortKeyword.ToLower(),
+                        ShortUrl = request.Domain  + request.ShortKeyword.ToLower(),
                         CreatedDateTime = DateTime.Now,
                         UpdatedDateTime = DateTime.Now,
                         UserId = user.Id
