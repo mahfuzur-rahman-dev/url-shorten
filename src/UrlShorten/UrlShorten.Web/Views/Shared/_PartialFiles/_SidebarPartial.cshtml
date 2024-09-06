@@ -1,0 +1,56 @@
+﻿
+
+<div class="sidebar-content js-simplebar">
+    <a class="sidebar-brand" href="#">
+        <span class="align-middle">Work Hub</span>
+    </a>
+
+    <ul class="sidebar-nav">
+
+        <li class="sidebar-header">Profile & Summary</li>
+
+        <li class="sidebar-item active">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Profile" asp-action="Index">
+                <i class="align-middle me-1" data-feather="user"></i> <span class="align-middle">Profile</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Summary" asp-action="Index">
+                <i class="align-middle" data-feather="activity"></i> <span class="align-middle">Work Summary</span>
+            </a>
+        </li>
+
+        <li class="sidebar-header">Today</li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Work" asp-action="Index">
+                <i class="align-middle" data-feather="list"></i> <span class="align-middle">Work list</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="Work" asp-action="ImportantWorkList">
+                <i class="align-middle" data-feather="star"></i> <span class="align-middle">Important</span>
+            </a>
+        </li>
+
+        <li class="sidebar-header">Work Files</li>
+
+        <li class="sidebar-item" data-bs-toggle="modal" data-bs-target="#createWorkFileInputModal">
+            <a class="sidebar-link">
+                <i class="align-middle" data-feather="plus"></i> <span class="align-middle">Create new work file</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a class="sidebar-link" asp-area="Member" asp-controller="WorkFile" asp-action="Index">
+                <i class="align-middle" data-feather="server"></i> <span class="align-middle">Work files</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+
+

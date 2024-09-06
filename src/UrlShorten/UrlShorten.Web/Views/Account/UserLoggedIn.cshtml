@@ -1,0 +1,32 @@
+﻿@section Styles {
+    <style>
+        .custom-size {
+            width: 100px;
+            height: 100px;
+        }
+
+        .important {
+            fill: #ffc107; /* Bootstrap warning color */
+        }
+
+        .icon-custom-size {
+            width: 30px;
+            height: 30px;
+        }
+    </style>
+}
+
+<div class="container text-center p-5 p-md-0">
+    <div class="row mb-4">
+        <div class="col-md-5 m-auto">
+            <figure>
+                <i class="align-middle me-1 custom-size" data-feather="zap"></i>
+            </figure>
+        </div>
+    </div>
+    <h2 class="display-6">You are already logged In</h2>
+    <p class="text-muted my-4">You cannot perform this action now. Go to url shorten page</p>
+    <div class="d-flex gap-3 justify-content-center">
+        <a asp-controller="Home" asp-action="Index" class="btn bg-warning w-25 p-3 fw-bold">Home</a>
+    </div>
+</div>

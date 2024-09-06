@@ -1,0 +1,17 @@
+﻿<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
+        <span id="UserName" class="text-dark"></span>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end">
+        <a class="dropdown-item" asp-controller="Home" asp-action="Index"><i class="align-middle me-1" data-feather="home"></i> Home</a>
+        <a class="dropdown-item" asp-controller="Profile" asp-action="Index"><i class="align-middle me-1" data-feather="user"></i> Profile</a>
+        <a class="dropdown-item" asp-controller="Home" asp-action="MyUrls"><i class="align-middle me-1" data-feather="paperclip"></i> My Urls</a>
+        <div class="dropdown-divider"></div>
+        <form asp-controller="Account" asp-action="Logout" method="post" class="mt-auto">
+            <button type="submit" class="btn btn-md p-2 text-white bg-danger w-100">
+                <i class="align-middle me-1" data-feather="log-out"></i> <span class="align-middle">Logout</span>
+            </button>
+        </form>
+    </div>
+</li>
+

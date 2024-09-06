@@ -1,8 +1,407 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+
+    var allUrls = ViewBag.AllUrls as IEnumerable<Url>;
+    var cookies = ViewBag.Cookies as List<string>;
+    var userName = ViewBag.UserName;
+
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section Styles {
+
+}
+
+
+<div class="row">
+    @{
+        if (!User.Identity.IsAuthenticated)
+        {
+            <div class="text-center mb-3">
+                <h5 class="text-success">Lets start with login? <a class="text-decoration-underline" asp-controller="Account" asp-action="Login">Login</a></h5>
+            </div>
+        }
+    }
+    <div class="col-md-8">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-md-10 col-sm-12">
+                <div class="p-4 border rounded">
+                    <div class="form-group mb-3">
+                        <input type="text" class="form-control py-3" id="longUrl" placeholder="Enter your long URL" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 mb-2 mb-sm-4">
+                            <div class="form-group">
+                                <input type="text" class="form-control py-3" id="domain" value="https://localhost:7063/" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-5 mb-2 mb-sm-4">
+                            <div class="form-group">
+                                <input type="text" class="form-control py-3" id="shortKeyword" placeholder="Your short keyword" required>
+                                <span id="shortkeywordValidationMassage" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex flex-column">
+                                <button id="checkAvailabilityBtn" type="button" class="btn btn-info w-100 py-3">Check availability</button>
+                                <div id="loader" class="d-none">
+                                    <button class="btn btn-info w-100 py-3" type="button" disabled>
+                                        <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                        <span role="status">Checking .........</span>
+                                    </button>
+                                </div>
+                                <span id="availabilityMessage" class="my-2 d-block text-center"> </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="createShortUrlSubmitBtn" type="button" class="btn btn-primary w-100 py-3" disabled>Create short url</button>
+
+                    <div id="visitQrCopyDiv" class="row justify-content-center mt-3 d-none">
+                        <div id="visitShortUrl" onclick="VisitShortUrl(this)" value="abc" class="col-3 col-md-3 btn btn-outline-success py-3 m-2 border border-dark fw-bold">
+                            <i class="align-middle me-2" data-feather="activity"></i>Visit
+                        </div>
+                        <div id="generateQR" onclick="GenerateQR()" class="col-3 col-md-3 btn btn-outline-success py-3 m-2 border border-dark fw-bold">
+                            <i class="align-middle me-2" data-feather="target"></i>&nbsp;QR
+                        </div>
+
+                        <div id="copyShortUrl" onclick="CopyShortUrl()" class="col-3 col-md-3 btn btn-outline-success py-3 m-2 border border-dark fw-bold">
+                            <i class="align-middle me-2" data-feather="copy"></i>&nbsp;Copy
+                        </div>
+
+                        <button onclick="CreateNewBtn()" type="button" class="btn btn-primary w-100 py-3 mt-3"><i class="align-middle me-2" data-feather="help-circle"></i>&nbsp;Create new ?</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 add-url">
+        @if (allUrls != null && allUrls.Any())
+        {
+            <div id="linkListCard" class="card">
+                <div class="card-header bg-primary ">
+                    <h1 class="text-white">List of Links</h1>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+
+
+                    @{
+
+                        var linkCount = 1;
+
+                        foreach (var url in allUrls)
+                        {
+                            <div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                <span class="fw-bold me-3">@linkCount.</span>
+                                <a onclick="RedirectToLongUrl('@url.ShortUrl')" class="text-decoration-underline">@url.ShortUrl</a>
+                            </div>
+                            linkCount++;
+                        }
+                    }
+                </div>
+            </div>
+        }
+        else if (cookies != null && cookies.Any())
+        {
+            <div id="linkListCard" class="card">
+                <div class="card-header bg-primary ">
+                    <h1 class="text-white">List of Links</h1>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+
+
+                    @{
+                        if (userName is null)
+                        {
+                            <div class="alert alert-warning" role="alert">Your are not logged in. Please <a asp-controller="Account" asp-action="Login">Login</a> to save your urls permanently..</div>
+                        }
+                        var linkCount = 1;
+
+                        if (userName == null)
+                        {
+                            foreach (var url in cookies)
+                            {
+                                <div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                    <span class="fw-bold me-3">@linkCount.</span>
+                                    <a onclick="RedirectToLongUrl('@url')" class="text-decoration-underline">@url</a>
+                                </div>
+                                linkCount++;
+                            }
+
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    
+   
 </div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrModalLabel">QR Code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                <div id="qrcode"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        $('#checkAvailabilityBtn').click(function () {
+            // Capture input data
+            var longUrl = $('#longUrl').val();
+            var shortKeyword = $('#shortKeyword').val().toLowerCase();
+            var domain = $('#domain').val();
+
+            // Validate input
+            if (!longUrl || !shortKeyword) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: "Please enter both long URL and short keyword."
+                });
+                return;
+            }
+
+            // Show the loader
+            $('#loader').removeClass('d-none');
+            $('#checkAvailabilityBtn').addClass('d-none');
+            $('#availabilityMessage').removeClass('text-danger text-success');
+
+            $.ajax({
+                url: '/Home/CheckShortKeywordAvailability',
+                type: 'POST',
+                data: {
+                    longUrl: longUrl,
+                    shortKeyword: shortKeyword
+                },
+                success: function (response) {
+                    // Handle successful response
+                    var availabilityMessage = $('#availabilityMessage');
+                    var submitBtn = $('#createShortUrlSubmitBtn');
+                    $('#shortkeywordValidationMassage').text('');
+
+                    if (response.available == true) {
+                        availabilityMessage.html('<i class="align-middle me-2" data-feather="check-circle"></i> Available')
+                            .addClass('text-success')
+                            .removeClass('d-none');
+                        submitBtn.prop('disabled', false);
+                    } else {
+                        availabilityMessage.html('<i class="align-middle me-2" data-feather="x-circle"></i> Already taken')
+                            .addClass('text-danger')
+                            .removeClass('d-none');
+                        submitBtn.prop('disabled', true);
+                    }
+                    feather.replace();
+
+
+
+                    // Hide the loader
+                    $('#loader').addClass('d-none');
+                    $('#checkAvailabilityBtn').removeClass('d-none');
+                },
+                error: function (error) {
+                    $('#shortkeywordValidationMassage').text(error.responseJSON.message);
+
+                    // Optionally log error to console if needed for debugging
+                    console.error(error.responseJSON.message);
+                    $('#loader').addClass('d-none');
+                    $('#checkAvailabilityBtn').removeClass('d-none');
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+        let SHORTURL = null;
+        $('#createShortUrlSubmitBtn').click(function () {
+            // Capture input data
+            var longUrl = $('#longUrl').val();
+            var shortKeyword = $('#shortKeyword').val();
+            var domain = $('#domain').val();
+            var shortKeywordInLower = $('#shortKeyword').val().toLowerCase();
+            SHORTURL = domain  + shortKeywordInLower;
+
+
+            var avc = "abc";
+            // Create short url ajax request...
+            $.ajax({
+                url: '/Home/CreateShortUrl',
+                type: 'POST',
+                data: {
+                    longUrl: longUrl,
+                    shortKeyword: shortKeyword,
+                    domain: domain
+                },
+                success: function (response) {
+
+
+                    if (response.createUrlStatus) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top",
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.onmouseenter = Swal.stopTimer;
+                                toast.onmouseleave = Swal.resumeTimer;
+                            }
+                        });
+                        Toast.fire({
+                            icon: "success",
+                            title: "Short URL created successfully..."
+                        });
+
+
+                        var newLinkHtml = `<div class="d-flex align-items-center mb-2 border-bottom py-3">
+                                                    <span class="fw-bold me-3">${$('#linkListCard .card-body .d-flex').length + 1}.</span>
+                                                            <a onclick="RedirectToLongUrl('${domain}${shortKeywordInLower}')" class="text-decoration-underline">${domain}${shortKeywordInLower}</a>
+                                                                        </div>`;
+
+                        if ($('#linkListCard').length) {
+                            $('#linkListCard .card-body').append(newLinkHtml);
+                        } else {
+                            var linkListCardHtml = `<div id="linkListCard" class="card">
+                                                                                            <div class="card-header bg-primary ">
+                                                                                                <h1 class="text-white">List of Links</h1>
+                                                                                            </div>
+                                                                                            <div class="card-body">
+                                                                                                ${newLinkHtml}
+                                                                                            </div>
+                                                                                        </div>`;
+                            $('.add-url').append(linkListCardHtml);
+                        }
+
+                        $('#createShortUrlSubmitBtn').prop('disabled', true);
+                        $('#availabilityMessage').addClass('d-none');
+
+                        $('#shortkeywordValidationMassage').text('');
+                        $('#longUrl').prop('disabled', true);
+                        var shortKeyword = $('#shortKeyword').prop('disabled', true);
+                        $('#checkAvailabilityBtn').prop('disabled', true);
+
+                        var availabilityMessage = $('#availabilityMessage');
+                        availabilityMessage.removeClass('text-danger text-success').empty();
+                        $('#visitQrCopyDiv').removeClass('d-none');
+
+                    }
+                },
+                error: function (error) {
+                    if (error.responseJSON.message != null) {
+                        $('#shortkeywordValidationMassage').text(error.responseJSON.message);
+
+                    }
+                    else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Oops...",
+                            html: error.responseJSON.massage
+                        });
+                    }
+
+                }
+            });
+        });
+
+        function VisitShortUrl() {
+            RedirectToLongUrl(SHORTURL);
+        }
+
+        function CopyShortUrl() {
+            // copy the url to the machine clipboard which is in SHORTURL;
+            navigator.clipboard.writeText(SHORTURL);
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: "success",
+                title: "Link copied in clipboard successfully"
+            });
+        }
+
+        function RedirectToLongUrl(shortUrl) {
+            $.ajax({
+                url: '@Url.Action("RedirectToLongUrl", "Home")',
+                type: 'POST',
+                data: { shortUrl: shortUrl },
+                success: function (response) {
+                    if (response.longUrl) {
+                        window.open(response.longUrl, '_blank'); // Automatically open the long URL in a new tab
+                    } else {
+                        alert("Link broken");
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Oops...",
+                        html: error.responseJSON.massage
+                    });
+                }
+            });
+        }
+
+        function CreateNewBtn() {
+            $('#longUrl').prop('disabled', false).val('');
+            $('#shortKeyword').val('').prop('disabled', false);
+            $('#shortkeywordValidationMassage').text('');
+            $('#checkAvailabilityBtn').prop('disabled', false);
+            var availabilityMessage = $('#availabilityMessage');
+            availabilityMessage.removeClass('text-danger text-success').empty();
+            $('#createShortUrlSubmitBtn').prop('disabled', true);
+            $('#visitQrCopyDiv').addClass('d-none');
+
+        }
+
+
+        /*  const shortUrl = SHORTURL; */ // Replace with your short URL
+
+        function GenerateQR() {
+            // Clear previous QR code
+            document.getElementById("qrcode").innerHTML = "";
+
+            // Generate new QR code
+            new QRCode(document.getElementById("qrcode"), {
+                text: SHORTURL,
+                width: 128, // width of the QR code
+                height: 128, // height of the QR code
+                colorDark: "#000000", // Dark color
+                colorLight: "#ffffff", // Light color
+                correctLevel: QRCode.CorrectLevel.H // Error correction level
+            });
+
+            // Show the modal
+            var qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+            qrModal.show();
+        }
+
+        $(document).ready(function () {
+            let userName = '@userName';
+            if (userName != null) {
+                $('#UserName').text(userName);
+            }
+        });
+    </script>
+
+
+}

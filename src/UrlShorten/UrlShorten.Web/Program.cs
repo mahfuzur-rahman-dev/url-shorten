@@ -1,7 +1,15 @@
+using UrlShorten.Web.Others;
+using WorkHub.Web.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDatabaseConfig(builder.Configuration);
+builder.Services.AddIdentityConfiguration(builder.Configuration);
+builder.Services.RegisterWebServices();
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CookieManagement>();
 
 var app = builder.Build();
 
@@ -17,7 +25,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
